@@ -1,82 +1,85 @@
 # ProjAI Studio
 
-ProjAI Studio is an Android mobile application (Kotlin + Jetpack Compose). This README documents how to build, run, and test the app from a fresh clone and lists required SDKs and toolchain versions.
+ProjAI Studio is an Android mobile application built with Kotlin and Jetpack Compose. This README documents the supported toolchain, build commands, and troubleshooting steps for a clean build.
 
 ## Quality note
-This project uses KSP code generators (Hilt, Room, Moshi). A full build requires the Android SDK, JDK, and Gradle wrapper. Follow these instructions to get a clean build and run the app.
+The project uses KSP code generation for Hilt, Room, and Moshi. A full build requires the Android SDK, JDK 17, and the included Gradle wrapper.
 
 ## Requirements
-- JDK: Java 11 (JDK 11). Ensure `java -version` reports a 11.x JVM.
+- JDK: Java 17. AGP 9.3 requires JDK 17.
 - Android SDK:
-  - Android SDK Platform 37 (compileSdkVersion = 37)
-  - Android SDK Build-Tools (matching latest available for your platform)
-  - Android Platform-Tools (adb)
-  - Emulator system image for API 37 (x86_64 recommended) or a physical device running a compatible Android version
-- Gradle: use the included Gradle wrapper (`./gradlew` / `gradlew.bat`). Do not install a system Gradle unless you know how to match versions.
-- Recommended IDE: Android Studio (Arctic Fox / newer). Open the project with Android Studio so it can auto-install required SDK components.
+  - Android SDK Platform 37 (`compileSdk = 37`)
+  - Android SDK Build-Tools
+  - Android Platform-Tools (`adb`)
+  - Emulator system image for API 37, or a compatible physical device
+- Gradle: use the included Gradle wrapper. The project uses Gradle 9.5.0.
+- Recommended IDE: Android Studio Quail 3 or newer. AGP 9.3 is compatible with current Android Studio releases that support it.
 
 ## Environment variables
-- ANDROID_SDK_ROOT or ANDROID_HOME should point to your SDK installation if not using Android Studio to manage the SDK.
+- `ANDROID_SDK_ROOT` or `ANDROID_HOME` may point to your Android SDK installation when the SDK is not managed automatically by Android Studio.
 
-## Quick setup (Windows / macOS / Linux)
-1. Install JDK 11 and Android Studio.
-2. Install Android SDK Platform 37 and required build-tools via Android Studio SDK Manager, or via command line:
+## Quick setup
+1. Install JDK 17 and Android Studio.
+2. Install Android SDK Platform 37 and the required build tools using Android Studio SDK Manager.
+3. Connect an Android device or create an API 37 emulator.
+4. Open the repository root in Android Studio and allow Gradle Sync to complete.
 
-   sdkmanager "platforms;android-37" "platform-tools" "build-tools;37.0.0"
-
-   (If `sdkmanager` is not on PATH, run it from the SDK `tools/bin` or use Android Studio.)
-
-3. Install an emulator image (x86_64) for API 37 (or nearest available). Example via sdkmanager:
-
-   sdkmanager "system-images;android-37;google_apis;x86_64"
-
-   Then create an AVD (example):
-
-   avdmanager create avd -n ProjAI_API_37 -k "system-images;android-37;google_apis;x86_64" -d pixel
-
-4. Start the emulator via Android Studio AVD Manager or:
-
-   emulator -avd ProjAI_API_37
-
-## Build & run (commands)
+## Build & run
 From the repository root:
 
-- Unix / macOS:
-  ./gradlew clean build
-  ./gradlew :app:assembleDebug
-  ./gradlew :app:installDebug    # installs to a connected device or running emulator
+### Windows
+```text
+gradlew.bat clean build
+gradlew.bat :app:assembleDebug
+gradlew.bat :app:installDebug
+```
 
-- Windows (PowerShell / CMD):
-  gradlew.bat clean build
-  gradlew.bat :app:assembleDebug
-  gradlew.bat :app:installDebug
+### macOS / Linux
+```text
+./gradlew clean build
+./gradlew :app:assembleDebug
+./gradlew :app:installDebug
+```
 
-Notes:
-- First build may trigger KSP processors (Hilt/Room/Moshi) and will take longer.
-- If the install step fails, ensure an emulator or device is connected (`adb devices`).
+The first build can take longer because KSP generates Hilt, Room, and Moshi sources.
 
 ## Run from Android Studio
-1. Open the project (select the repository root) in Android Studio.
-2. Let Gradle sync and allow Android Studio to download any missing SDK components.
-3. Select a device/emulator and click Run (green ▶). Android Studio handles install and launch.
+1. Open the repository root.
+2. Confirm Gradle uses JDK 17.
+3. Sync the project.
+4. Select an emulator or connected device.
+5. Run the `app` configuration.
 
-## Common issues & troubleshooting
-- KSP / annotation processor errors: Clean and rebuild (`./gradlew clean assembleDebug`) and verify KSP plugin is applied in `app/build.gradle.kts`.
-- Java version mismatch: Ensure Android Studio / command-line Java uses JDK 11. On some systems Android Studio bundles a compatible JDK; command-line `java` may be different.
-- Missing SDK or platforms: Use SDK Manager in Android Studio or `sdkmanager` to install `platforms;android-37` and a system image.
-- adb not found: Ensure `platform-tools` are installed and `adb` is on PATH or use the Android Studio terminal.
-- Slow Gradle/KSP builds: Increase Gradle daemon memory in `gradle.properties` (already set to -Xmx2048m). Use `org.gradle.configuration-cache=true` to speed repeated builds.
+## Troubleshooting
+- **JDK mismatch:** verify that Android Studio's Gradle JDK is 17 and that `java -version` reports JDK 17 when using the terminal.
+- **KSP errors:** run `gradlew.bat clean assembleDebug` and confirm the KSP plugin version matches Kotlin 2.2.10.
+- **Missing SDK:** install Android SDK Platform 37 and Platform-Tools from SDK Manager.
+- **adb not found:** install Platform-Tools and ensure `adb` is available from the Android Studio terminal.
+- **Slow builds:** Gradle configuration cache is enabled and the daemon heap is capped at 2 GB in `gradle.properties`.
 
 ## Testing
-- Unit tests and Android instrumented tests are configured in the `app` module (see `app/build.gradle.kts`). Run:
+Run JVM tests with:
 
-  ./gradlew test    # JVM unit tests
-  ./gradlew connectedAndroidTest  # instrumentation tests on a device/emulator
+```text
+gradlew.bat test
+```
 
-## Notes for maintainers
-- The project targets compileSdk 37 and minSdk 26 (see app/build.gradle.kts). Verify any new libraries are compatible with these SDK levels.
-- Do not commit API keys or secrets to the repo. If a feature requires external API access, inject secrets through Gradle properties or Android keystore at runtime.
+Run instrumented tests with a connected device/emulator:
 
----
+```text
+gradlew.bat connectedAndroidTest
+```
 
-If you want, I can add a short developer-facing HOWTO section that documents common Gradle tasks, or I can open a PR with the README added — tell me which you prefer.
+## Security
+Do not commit API keys, passwords, tokens, or other secrets. External API credentials should be injected through a secure runtime mechanism such as Gradle properties for local development or Android Keystore-backed storage where appropriate.
+
+## Project configuration
+- Application ID: `com.example.projaistudio`
+- `minSdk = 26`
+- `targetSdk = 37`
+- `compileSdk = 37`
+- Java source/target compatibility: 11
+- Gradle wrapper: 9.5.0
+- Android Gradle Plugin: 9.3.1
+- Kotlin: 2.2.10
+- KSP: 2.2.10-2.0.2
